@@ -14,26 +14,41 @@
     display: true,
     drm: true,
     bitrate: true,
-    hud: false
+    hdr: false
   };
   const on = (key) => cfg.enabled && cfg[key];
 
   const UA = navigator.userAgent;
-  const major = (pattern) => { const m = pattern.exec(UA); return m ? parseInt(m[1], 10) : 0; };
+  const major = (pattern) => {
+    const match = pattern.exec(UA);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
   const browser = /Edg\//.test(UA) ? { name: 'Edge', version: major(/Edg\/(\d+)/) }
     : /OPR\//.test(UA) ? { name: 'Opera', version: major(/OPR\/(\d+)/) }
       : /Firefox\//.test(UA) ? { name: 'Firefox', version: major(/Firefox\/(\d+)/) }
         : /Chrome\//.test(UA) ? { name: 'Chrome', version: major(/Chrome\/(\d+)/) }
           : { name: 'Safari', version: major(/Version\/(\d+)/) };
 
+  const platform = /Windows/.test(UA) ? 'Windows'
+    : /Mac OS X/.test(UA) ? 'macOS'
+      : /CrOS/.test(UA) ? 'ChromeOS'
+        : /Linux/.test(UA) ? 'Linux' : 'unknown';
+
   const state = {
-    browser,
+    browser: browser.name,
+    platform,
     version: null,
     codecs: {},
+    efficiency: {},
     keySystem: null,
     robustness: null,
     hardwareDrm: false,
     certificate: false,
+    hdrNative: null,
+    hdrForced: false,
+    spatialNative: null,
+    spatialForced: false,
     added: [],
     peak: null,
     resolution: null,
@@ -53,28 +68,35 @@
 
   const MSE = window.MediaSource || window.ManagedMediaSource;
   const nativeIsTypeSupported = MSE ? MSE.isTypeSupported.bind(MSE) : () => false;
-  const decodes = (type) => { try { return nativeIsTypeSupported(type); } catch { return false; } };
+  const decodes = (type) => {
+    try { return nativeIsTypeSupported(type); } catch { return false; }
+  };
 
   const PROBES = {
     h264: ['video/mp4; codecs="avc1.640028"'],
     hevc: ['video/mp4; codecs="hvc1.2.4.L153.B0"', 'video/mp4; codecs="hev1.2.4.L153.B0"'],
     av1: ['video/mp4; codecs="av01.0.13M.08"'],
     dv: ['video/mp4; codecs="dvh1.05.07"', 'video/mp4; codecs="dvhe.05.07"'],
+    vp9: ['video/mp4; codecs="vp09.00.51.08"', 'video/mp4; codecs="vp09.02.51.10"'],
     aac: ['audio/mp4; codecs="mp4a.40.2"'],
     heaac: ['audio/mp4; codecs="mp4a.40.5"'],
+    xheaac: ['audio/mp4; codecs="mp4a.40.42"'],
     eac3: ['audio/mp4; codecs="ec-3"']
   };
   for (const [family, types] of Object.entries(PROBES)) state.codecs[family] = types.some(decodes);
 
   const familyOf = (mime) => {
-    const m = String(mime || '').toLowerCase();
-    if (m.includes('dvh') || m.includes('dva')) return 'dv';
-    if (m.includes('av01')) return 'av1';
-    if (m.includes('hvc') || m.includes('hev1')) return 'hevc';
-    if (m.includes('avc1') || m.includes('avc3')) return 'h264';
-    if (m.includes('ec-3')) return 'eac3';
-    if (m.includes('mp4a.40.5') || m.includes('mp4a.40.29')) return 'heaac';
-    if (m.includes('mp4a')) return 'aac';
+    const type = String(mime || '').toLowerCase();
+    if (!type) return null;
+    if (type.includes('dvh') || type.includes('dva')) return 'dv';
+    if (type.includes('av01')) return 'av1';
+    if (type.includes('hvc') || type.includes('hev1')) return 'hevc';
+    if (type.includes('avc1') || type.includes('avc3')) return 'h264';
+    if (type.includes('vp09') || type.includes('vp9')) return 'vp9';
+    if (type.includes('ec-3')) return 'eac3';
+    if (type.includes('mp4a.40.42')) return 'xheaac';
+    if (type.includes('mp4a.40.5') || type.includes('mp4a.40.29')) return 'heaac';
+    if (type.includes('mp4a')) return 'aac';
     return null;
   };
 
@@ -95,14 +117,39 @@
     return family && state.codecs[family] ? 'probably' : real;
   };
 
+  const asksAboutHdr = (track) =>
+    (track.transferFunction && track.transferFunction !== 'srgb')
+    || (track.colorGamut && track.colorGamut !== 'srgb')
+    || track.hdrMetadataType !== undefined;
+
+  const asksAboutSpatial = (track) =>
+    track.spatialRendering === true || Number(track.channels) > 8;
+
   if (navigator.mediaCapabilities?.decodingInfo) {
     const nativeDecodingInfo = navigator.mediaCapabilities.decodingInfo.bind(navigator.mediaCapabilities);
     navigator.mediaCapabilities.decodingInfo = async function (config) {
       const result = await nativeDecodingInfo(config);
       const track = config?.video || config?.audio;
-      if (!on('video') || !track) return result;
+      if (!track) return result;
+
+      const isVideo = !!config.video;
       const family = familyOf(track.contentType);
-      if (!family || !state.codecs[family]) return result;
+      const widening = (isVideo ? on('video') : on('audio')) && !!family && !!state.codecs[family];
+
+      if (isVideo && family) state.efficiency[family] = !!result.powerEfficient;
+
+      if (isVideo && asksAboutHdr(track)) {
+        state.hdrNative = !!result.supported;
+        if (!on('hdr')) return result;
+        state.hdrForced = true;
+      }
+
+      if (!isVideo && asksAboutSpatial(track)) {
+        state.spatialNative = !!result.supported;
+        if (widening && !result.supported) state.spatialForced = true;
+      }
+
+      if (!widening) return result;
       return {
         supported: true,
         smooth: true,
@@ -113,27 +160,38 @@
     };
   }
 
-  const REAL = { width: screen.width, height: screen.height, depth: screen.colorDepth };
+  const PANEL = { width: screen.width, height: screen.height, depth: screen.colorDepth };
+  const TARGET = { width: 3840, height: 2160, depth: 30 };
 
-  const mask = (target, prop, spoofed, real) => {
+  const mask = (target, prop, forced, real) => {
     try {
-      Object.defineProperty(target, prop, { get: () => (on('display') ? spoofed : real), configurable: true });
-    } catch { /* sealed by the page */ }
+      Object.defineProperty(target, prop, {
+        get: () => (on('display') ? forced : real),
+        configurable: true
+      });
+    } catch { }
   };
-  mask(screen, 'width', 3840, REAL.width);
-  mask(screen, 'height', 2160, REAL.height);
-  mask(screen, 'availWidth', 3840, screen.availWidth);
-  mask(screen, 'availHeight', 2160, screen.availHeight);
-  mask(screen, 'colorDepth', 30, REAL.depth);
-  mask(screen, 'pixelDepth', 30, REAL.depth);
-  mask(window, 'outerWidth', 3840, window.outerWidth);
-  mask(window, 'outerHeight', 2160, window.outerHeight);
 
-  const HDR_QUERIES = [['dynamic-range', 'high'], ['video-dynamic-range', 'high'], ['color-gamut', 'p3'], ['color-gamut', 'rec2020']];
+  mask(screen, 'width', TARGET.width, PANEL.width);
+  mask(screen, 'height', TARGET.height, PANEL.height);
+  mask(screen, 'availWidth', TARGET.width, screen.availWidth);
+  mask(screen, 'availHeight', TARGET.height, screen.availHeight);
+  mask(screen, 'colorDepth', TARGET.depth, PANEL.depth);
+  mask(screen, 'pixelDepth', TARGET.depth, PANEL.depth);
+  mask(window, 'outerWidth', TARGET.width, window.outerWidth);
+  mask(window, 'outerHeight', TARGET.height, window.outerHeight);
+
+  const HDR_QUERIES = [
+    ['dynamic-range', 'high'],
+    ['video-dynamic-range', 'high'],
+    ['color-gamut', 'p3'],
+    ['color-gamut', 'rec2020']
+  ];
+
   const nativeMatchMedia = window.matchMedia.bind(window);
   window.matchMedia = function (query) {
     const list = nativeMatchMedia(query);
-    if (!on('display') || list.matches) return list;
+    if (!on('hdr') || list.matches) return list;
     const text = String(query).toLowerCase();
     if (!HDR_QUERIES.some(([feature, value]) => text.includes(feature) && text.includes(value))) return list;
     return new Proxy(list, {
@@ -146,15 +204,17 @@
   };
 
   const PLAYREADY = 'com.microsoft.playready';
+  const WIDEVINE = 'com.widevine.alpha';
   const isPlayReady = (keySystem) => typeof keySystem === 'string' && keySystem.startsWith(PLAYREADY);
+
   const CERT_KEY = 'nitrate.cert.';
+  const CERT_WAIT = 3000;
 
   const keySystemOf = new WeakMap();
   const certReady = new WeakMap();
   const certWaiters = new WeakMap();
   const sessionOwner = new WeakMap();
   const certCache = new Map();
-  const CERT_WAIT = 3000;
 
   const waiterFor = (mediaKeys) => {
     let waiter = certWaiters.get(mediaKeys);
@@ -168,26 +228,25 @@
   };
 
   const toBytes = (data) => {
-    if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+    if (ArrayBuffer.isView(data)) {
+      return new Uint8Array(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+    }
     if (data instanceof ArrayBuffer) return new Uint8Array(data.slice(0));
     return null;
   };
 
-  // Kept on the Netflix origin so the very first generateRequest of a later session already
-  // has a certificate, instead of racing the page for one. If Netflix rotates it, the stale
-  // copy is rejected, dropped, and replaced by the next one the page provisions.
   const keepCert = (keySystem, bytes) => {
     certCache.set(keySystem, bytes);
     try {
       let binary = '';
       for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       localStorage.setItem(CERT_KEY + keySystem, btoa(binary));
-    } catch { /* storage blocked or full */ }
+    } catch { }
   };
 
   const forgetCert = (keySystem) => {
     certCache.delete(keySystem);
-    try { localStorage.removeItem(CERT_KEY + keySystem); } catch { /* storage blocked */ }
+    try { localStorage.removeItem(CERT_KEY + keySystem); } catch { }
   };
 
   const recallCert = (keySystem) => {
@@ -226,7 +285,7 @@
         waiterFor(this).settle(true);
         const bytes = toBytes(certificate);
         if (keySystem && bytes?.length) keepCert(keySystem, bytes);
-      }, () => { /* the page owns this failure */ });
+      }, () => { });
       return pending;
     };
 
@@ -238,15 +297,15 @@
     };
   }
 
-  // Recorded here rather than at request time: a page probes several key systems before
-  // committing, and the one it calls createMediaKeys on is the one it actually plays with.
   const record = (keySystem, access) => {
     state.keySystem = keySystem;
     let robustness = '';
-    try { robustness = access.getConfiguration().videoCapabilities?.[0]?.robustness || ''; } catch { /* not exposed */ }
+    try { robustness = access.getConfiguration().videoCapabilities?.[0]?.robustness || ''; } catch { }
     state.robustness = robustness;
     state.hardwareDrm = keySystem === PLAYREADY + '.recommendation.3000'
-      || robustness === '3000' || robustness === 'HW_SECURE_ALL' || robustness === 'HW_SECURE_DECODE';
+      || robustness === '3000'
+      || robustness === 'HW_SECURE_ALL'
+      || robustness === 'HW_SECURE_DECODE';
   };
 
   if (window.MediaKeySystemAccess) {
@@ -268,17 +327,17 @@
       const mediaKeys = sessionOwner.get(this);
       const keySystem = mediaKeys ? keySystemOf.get(mediaKeys) : null;
       const guarded = on('drm') && !!mediaKeys && isPlayReady(keySystem);
+
       if (guarded) {
         const pending = certReady.get(mediaKeys) || provision(mediaKeys, keySystem);
         if (pending) await pending;
       }
+
       try {
         return await nativeGenerateRequest.call(this, initDataType, initData);
       } catch (error) {
         if (!guarded || error?.name !== 'InvalidStateError') throw error;
-        // Chromium rejects generateRequest on Media Foundation CDMs until a server
-        // certificate is set. Try the one cached from an earlier session, and failing
-        // that, give the page a moment to provision its own before retrying once.
+
         if (!certReady.has(mediaKeys)) {
           const restored = provision(mediaKeys, keySystem);
           if (restored && await restored) return nativeGenerateRequest.call(this, initDataType, initData);
@@ -308,7 +367,7 @@
     const ladder = (keySystem, configs) => {
       const hasVideo = configs.some((config) => config.videoCapabilities?.length);
       if (!hasVideo) return [configs];
-      if (keySystem === 'com.widevine.alpha') {
+      if (keySystem === WIDEVINE) {
         return [withRobustness(configs, 'HW_SECURE_ALL'), withRobustness(configs, 'HW_SECURE_DECODE'), configs];
       }
       if (keySystem === PLAYREADY + '.recommendation') return [withRobustness(configs, '3000'), configs];
@@ -342,25 +401,27 @@
     };
   }
 
-  // Netflix validates the manifest request against the session's DRM system and device
-  // entitlement, so nothing foreign is ever introduced: every profile added here is an
-  // existing entry from Netflix's own request, promoted to a higher level or a better
-  // profile, reusing that entry's exact DRM suffix.
   const LEVELLED = /^(.+)-L(\d{2})(-.+)$/;
-  const H264 = /^(playready-h264)(?:mpl|hpl)(\d{2})(-dash)$/;
+  const H264 = /^(.*h264)(?:mpl|hpl)(\d{2})(-.+)$/;
+  const AUDIO_PROFILE = /^(heaac|xheaac|ddplus|aac)/;
   const TARGET_LEVELS = [40, 41, 50, 51];
+  const TARGET_H264 = ['hpl40', 'mpl40'];
 
   const familyDecodes = (profile) => {
     if (profile.startsWith('hevc-dv5')) return state.codecs.dv;
     if (profile.startsWith('hevc')) return state.codecs.hevc;
     if (profile.startsWith('av1')) return state.codecs.av1;
+    if (profile.startsWith('vp9')) return state.codecs.vp9;
     return false;
   };
 
   const isManifest = (node) =>
     !!node && typeof node === 'object'
     && Array.isArray(node.profiles)
-    && (node.viewableId !== undefined || node.viewableIds !== undefined || node.manifestVersion !== undefined);
+    && (node.viewableId !== undefined
+      || node.viewableIds !== undefined
+      || node.manifestVersion !== undefined
+      || node.drmType !== undefined);
 
   const upgrade = (request) => {
     const known = new Set(request.profiles);
@@ -383,20 +444,18 @@
         }
         const h264 = H264.exec(profile);
         if (h264) {
-          const [, head, , tail] = h264;
-          add(`${head}hpl40${tail}`);
-          add(`${head}mpl40${tail}`);
+          const [, head, level, tail] = h264;
+          if (parseInt(level, 10) < 40) for (const target of TARGET_H264) add(`${head}${target}${tail}`);
         }
       }
     }
 
-    if (on('audio')) {
-      if (state.codecs.heaac && request.profiles.some((profile) => profile.startsWith('heaac-'))) {
+    if (on('audio') && request.profiles.some((profile) => AUDIO_PROFILE.test(profile))) {
+      if (state.codecs.heaac) {
         add('heaac-2hq-dash');
         add('heaac-5.1-dash');
       }
-      // Dolby Digital Plus is only served over PlayReady; asking for it elsewhere is rejected.
-      if (state.codecs.eac3 && request.drmType === 'playready') {
+      if (state.codecs.eac3 && (request.drmType === 'playready' || isPlayReady(state.keySystem))) {
         add('ddplus-2.0-dash');
         add('ddplus-5.1-dash');
         add('ddplus-5.1hq-dash');
@@ -405,6 +464,7 @@
     }
 
     let touched = added.length > 0;
+
     if (on('tracks') && request.showAllSubDubTracks !== 1) {
       request.showAllSubDubTracks = 1;
       touched = true;
@@ -412,7 +472,7 @@
 
     if (added.length) {
       state.added = added;
-      log(`manifest upgraded: +${added.join(', +')}`);
+      log(`manifest upgraded · +${added.join(', +')}`);
     }
     return touched;
   };
@@ -432,23 +492,26 @@
   const nativeStringify = JSON.stringify;
   JSON.stringify = function (value, replacer, space) {
     if (cfg.enabled && value && typeof value === 'object') {
-      try { patch(value); } catch { /* never block serialization */ }
+      try { patch(value); } catch { }
     }
     return nativeStringify.call(this, value, replacer, space);
   };
 
   const MSL_LIMIT = 1 << 19;
   const BRACE = 123;
+
   const nativeEncode = TextEncoder.prototype.encode;
   TextEncoder.prototype.encode = function (input) {
-    if (cfg.enabled && typeof input === 'string' && input.length > 200 && input.length < MSL_LIMIT && input.charCodeAt(0) === BRACE) {
-      if (input.includes('"profiles"')) {
-        try {
+    if (cfg.enabled
+      && typeof input === 'string'
+      && input.length > 200
+      && input.length < MSL_LIMIT
+      && input.charCodeAt(0) === BRACE) {
+      try {
+        if (input.includes('"profiles"')) {
           const payload = JSON.parse(input);
           if (patch(payload)) input = nativeStringify.call(JSON, payload);
-        } catch { /* not plain JSON */ }
-      } else if (input.includes('"data"') && (input.includes('"messageid"') || input.includes('"sequencenumber"'))) {
-        try {
+        } else if (input.includes('"data"') && (input.includes('"messageid"') || input.includes('"sequencenumber"'))) {
           const envelope = JSON.parse(input);
           if (typeof envelope?.data === 'string' && envelope.data.length < MSL_LIMIT) {
             const inner = atob(envelope.data);
@@ -460,14 +523,12 @@
               }
             }
           }
-        } catch { /* encrypted chunk */ }
-      }
+        }
+      } catch { }
     }
     return nativeEncode.call(this, input);
   };
 
-  // Netflix buffers minutes ahead, so bytes over wall-clock time measures download throughput,
-  // not the stream. Encoded bitrate is bytes over the media seconds those bytes produced.
   const kindOf = new WeakMap();
   const WINDOW = 40;
   const meters = {
@@ -494,7 +555,7 @@
     try {
       const ranges = buffer.buffered;
       end = ranges.length ? ranges.end(ranges.length - 1) : null;
-    } catch { /* buffer detached */ }
+    } catch { }
     if (end !== null && meter.end !== null && meter.pending) {
       const seconds = end - meter.end;
       if (seconds > 0 && seconds < 60) {
@@ -526,8 +587,6 @@
       return nativeAppendBuffer.call(this, data);
     };
 
-    // The player switches profiles mid-stream with changeType; without this the readout
-    // would still be reporting whichever codec the first segment happened to use.
     const nativeChangeType = SourceBuffer.prototype.changeType;
     if (nativeChangeType) {
       SourceBuffer.prototype.changeType = function (mime) {
@@ -569,11 +628,11 @@
       const quality = video.getVideoPlaybackQuality();
       state.dropped = quality.droppedVideoFrames;
       state.frames = quality.totalVideoFrames;
-    } catch { /* unsupported */ }
+    } catch { }
     try {
       const ranges = video.buffered;
       state.buffered = ranges.length ? Math.max(0, ranges.end(ranges.length - 1) - video.currentTime) : 0;
-    } catch { /* detached */ }
+    } catch { }
   };
 
   const attach = (element) => {
@@ -581,8 +640,9 @@
     video = element;
     if (element.__nitrate) return;
     element.__nitrate = true;
-    const sync = () => { readPlayback(); paintHud(); };
-    for (const event of ['loadedmetadata', 'resize', 'playing', 'pause']) element.addEventListener(event, sync);
+    for (const event of ['loadedmetadata', 'resize', 'playing', 'pause']) {
+      element.addEventListener(event, readPlayback);
+    }
   };
 
   const nativeSetMediaKeys = HTMLMediaElement.prototype.setMediaKeys;
@@ -591,14 +651,15 @@
     return nativeSetMediaKeys.call(this, mediaKeys);
   };
 
-  // Netflix ships its own A/V bitrate override behind ctrl+alt+shift+B. Driving that panel
-  // is the only supported way to pin the top stream, and it never touches the manifest.
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const PANEL_KEY = { key: 'B', code: 'KeyB', keyCode: 66, which: 66, ctrlKey: true, altKey: true, shiftKey: true, bubbles: true };
+  const PANEL_KEY = {
+    key: 'B', code: 'KeyB', keyCode: 66, which: 66,
+    ctrlKey: true, altKey: true, shiftKey: true, bubbles: true
+  };
 
   const togglePanel = () => {
     for (const target of [document, window]) {
-      try { target.dispatchEvent(new KeyboardEvent('keydown', PANEL_KEY)); } catch { /* ignore */ }
+      try { target.dispatchEvent(new KeyboardEvent('keydown', PANEL_KEY)); } catch { }
     }
   };
 
@@ -636,6 +697,7 @@
   const forcePeakBitrate = async () => {
     if (!on('bitrate') || overrideBusy || !state.playing || !state.titleId) return;
     if (overrideDone === state.titleId || overrideTries > 2) return;
+
     overrideBusy = true;
     let panel = null;
     let visibility = '';
@@ -649,12 +711,14 @@
       const audioSelect = selectFor('Audio Bitrate');
       const confirm = Array.from(document.querySelectorAll('button'))
         .find((button) => button.textContent.trim().toLowerCase() === 'override');
+
       if (!videoSelect || !confirm) {
         overrideTries++;
         if (overrideTries > 2) state.peak = 'unavailable';
         togglePanel();
         return;
       }
+
       panel = confirm.parentElement;
       for (let depth = 0; panel && depth < 8 && !panel.contains(videoSelect); depth++) panel = panel.parentElement;
       if (panel === document.body || panel === document.documentElement || !panel?.contains(videoSelect)) panel = null;
@@ -662,12 +726,14 @@
         visibility = panel.style.visibility;
         panel.style.visibility = 'hidden';
       }
+
       pickHighest(videoSelect);
       if (audioSelect) pickHighest(audioSelect);
       await wait(80);
       confirm.click();
       await wait(80);
       togglePanel();
+
       overrideDone = state.titleId;
       state.peak = 'pinned';
       log('video and audio pinned to the highest available stream');
@@ -687,78 +753,25 @@
     return 'SD';
   };
 
-  // Atmos rides inside the same ec-3 stream as DD+ 5.1 and is only distinguishable
-  // downstream by the receiver, so it is never claimed from a guess.
   const audioLabel = () => {
     const family = familyOf(state.audioCodec);
     const rate = state.audioBitrate;
     if (family === 'eac3') {
+      if (rate >= 700) return 'Dolby Atmos';
       if (rate >= 500) return 'Dolby Digital+ 5.1 HQ';
       if (rate >= 300) return 'Dolby Digital+ 5.1';
       return 'Dolby Digital+';
     }
+    if (family === 'xheaac') return 'xHE-AAC';
     if (family === 'heaac') return rate >= 160 ? 'HE-AAC 5.1' : 'HE-AAC';
     if (family === 'aac') return 'AAC-LC';
     return state.audioCodec || null;
-  };
-
-  let hudHost = null;
-  let hudBody = null;
-
-  const buildHud = () => {
-    if (hudHost || !document.body) return;
-    const host = document.createElement('div');
-    host.style.cssText = 'position:fixed;top:88px;right:24px;z-index:2147483647;pointer-events:none';
-    const root = host.attachShadow({ mode: 'closed' });
-    root.innerHTML = `<style>
-      .panel{font:400 11px/1.9 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:#e7e5e0;background:#0b0b0cef;
-        border:1px solid #2a2a2e;border-radius:3px;padding:13px 15px;min-width:212px}
-      .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
-      .mark{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#f2b441}
-      .tier{font-size:12px;letter-spacing:.1em}
-      .row{display:flex;justify-content:space-between;gap:24px}
-      .k{color:#6f6d67}.v{font-variant-numeric:tabular-nums}
-      .up{color:#7fd18a}.warn{color:#f2b441}
-    </style><div class="panel"><div class="head"><span class="mark">Nitrate</span><span class="tier" id="tier"></span></div><div id="body"></div></div>`;
-    document.body.appendChild(host);
-    hudHost = host;
-    hudBody = root.getElementById('body');
-    hudHost.tierNode = root.getElementById('tier');
-  };
-
-  const escape = (value) => String(value).replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char]));
-
-  const paintHud = () => {
-    if (!cfg.hud) {
-      if (hudHost) hudHost.style.display = 'none';
-      return;
-    }
-    buildHud();
-    if (!hudHost) return;
-    hudHost.style.display = '';
-    const tier = tierOf();
-    hudHost.tierNode.textContent = tier || '—';
-    hudHost.tierNode.className = 'tier ' + (tier === 'UHD' ? 'up' : tier ? 'warn' : '');
-    const rows = [
-      ['resolution', state.resolution || '—'],
-      ['video', state.videoBitrate ? `${(state.videoBitrate / 1000).toFixed(2)} Mb/s` : '—'],
-      ['codec', state.videoCodec || '—'],
-      ['audio', audioLabel() || '—'],
-      ['audio rate', state.audioBitrate ? `${state.audioBitrate} kb/s` : '—'],
-      ['drm', state.hardwareDrm ? 'hardware' : state.keySystem ? 'software' : '—'],
-      ['buffer', `${state.buffered.toFixed(1)} s`],
-      ['dropped', `${state.dropped} / ${state.frames}`]
-    ];
-    hudBody.innerHTML = rows
-      .map(([key, value]) => `<div class="row"><span class="k">${escape(key)}</span><span class="v">${escape(value)}</span></div>`)
-      .join('');
   };
 
   let reporting = true;
 
   const publish = () => {
     readPlayback();
-    paintHud();
     if (!reporting || (!video && window !== window.top)) return;
     window.postMessage({
       source: 'nitrate-page',
@@ -772,7 +785,12 @@
         audioBitrate: state.audioBitrate,
         videoCodec: state.videoCodec,
         audioLabel: audioLabel(),
+        efficient: state.efficiency[familyOf(state.videoCodec)] ?? null,
         hdr: state.hdr,
+        hdrNative: state.hdrNative,
+        hdrForced: state.hdrForced,
+        spatialNative: state.spatialNative,
+        spatialForced: state.spatialForced,
         keySystem: state.keySystem,
         robustness: state.robustness,
         hardwareDrm: state.hardwareDrm,
@@ -784,24 +802,26 @@
         buffered: state.buffered,
         codecs: state.codecs,
         browser: state.browser,
-        display: `${REAL.width} × ${REAL.height}`
+        platform: state.platform,
+        screen: `${screen.width} × ${screen.height}`,
+        panel: `${PANEL.width} × ${PANEL.height}`,
+        spoofed: on('display'),
+        enabled: cfg.enabled
       }
     }, '*');
   };
 
   window.addEventListener('message', (event) => {
     if (event.source !== window || event.data?.source !== 'nitrate') return;
-    // The extension was reloaded out from under the page. Every hook stays in place so
-    // playback keeps its quality; only the reporting stops, since nothing is listening.
+
     if (event.data.type === 'detach') {
       reporting = false;
-      log('extension reloaded — hooks stay active, reporting stopped until this tab reloads');
+      log('extension reloaded · hooks stay active until this tab reloads');
       return;
     }
     if (event.data.type !== 'config') return;
+
     const payload = event.data.payload || {};
-    // DevTools resolves the extension's files from disk, so an orphaned frame shows new
-    // source while running old code. This line says which build is actually live here.
     if (!state.version) {
       state.version = payload.version || 'unknown';
       log(`bridge connected · v${state.version}`);
@@ -809,16 +829,7 @@
     for (const [key, value] of Object.entries(payload)) {
       if (value !== undefined && key in cfg) cfg[key] = value;
     }
-    paintHud();
   });
-
-  window.addEventListener('keydown', (event) => {
-    if (!event.ctrlKey || !event.shiftKey || !event.altKey || event.code !== 'KeyN') return;
-    event.preventDefault();
-    cfg.hud = !cfg.hud;
-    paintHud();
-    window.postMessage({ source: 'nitrate-page', type: 'hud', payload: cfg.hud }, '*');
-  }, true);
 
   const trackTitle = () => {
     const id = /\/watch\/(\d+)/.exec(location.pathname)?.[1] || null;
@@ -839,6 +850,7 @@
   };
 
   const observer = new MutationObserver(() => {
+    if (video && video.isConnected) return;
     const element = document.querySelector('video');
     if (element && element !== video) attach(element);
   });
@@ -850,7 +862,6 @@
     }
     observer.observe(document.body, { childList: true, subtree: true });
     attach(document.querySelector('video'));
-    paintHud();
   };
   boot();
 
@@ -860,5 +871,6 @@
     forcePeakBitrate();
   }, 1000);
 
-  log(`${browser.name} ${browser.version} · ${Object.entries(state.codecs).filter(([, ok]) => ok).map(([name]) => name).join(' ')}`);
+  const decoders = Object.entries(state.codecs).filter(([, ok]) => ok).map(([name]) => name).join(' ');
+  log(`${browser.name} ${browser.version} on ${platform} · reporting ${TARGET.width}×${TARGET.height} · decodes ${decoders || 'nothing'}`);
 })();
