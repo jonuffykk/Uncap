@@ -1,0 +1,14 @@
+{
+  "name": "nitrate",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser extension that unlocks the highest video and audio Netflix will serve your hardware.",
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3"
+  }
+}
