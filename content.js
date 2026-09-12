@@ -1,49 +1,45 @@
 (() => {
   'use strict';
 
-  const KEYS = ['enabled', 'video', 'audio', 'tracks', 'display', 'drm', 'bitrate', 'hud'];
+  const KEYS = ['enabled', 'video', 'audio', 'tracks', 'display', 'drm', 'bitrate', 'hdr'];
   let live = true;
 
   const post = (type, payload) => {
     try {
       window.postMessage({ source: 'nitrate', type, payload }, '*');
-    } catch { /* the page is tearing down */ }
+    } catch { }
   };
 
-  const stop = () => {
+  const retire = () => {
     if (!live) return;
     live = false;
     window.removeEventListener('message', relay);
     post('detach');
   };
 
-  // Reloading or updating the extension orphans this script while the page keeps running, and
-  // every chrome.* call then throws synchronously — something a .catch() never sees. So each
-  // one goes through here, and the first failure retires the bridge for good rather than
-  // throwing once per telemetry tick. Nothing outside this function touches chrome.
-  const call = (fn) => {
+  const guard = (fn) => {
     if (!live) return;
     try {
       const result = fn();
-      if (typeof result?.then === 'function') result.then(undefined, stop);
+      if (typeof result?.then === 'function') result.then(undefined, retire);
     } catch {
-      stop();
+      retire();
     }
   };
 
   function relay(event) {
     if (!live || event.source !== window || event.data?.source !== 'nitrate-page') return;
-    const { type, payload } = event.data;
-    if (type === 'telemetry') call(() => chrome.runtime.sendMessage({ type: 'telemetry', telemetry: payload }));
-    else if (type === 'hud') call(() => chrome.storage.local.set({ hud: payload }));
+    if (event.data.type !== 'telemetry') return;
+    guard(() => chrome.runtime.sendMessage({ type: 'telemetry', telemetry: event.data.payload }));
   }
 
   window.addEventListener('message', relay);
 
-  call(() => chrome.storage.local.get(KEYS)
-    .then((config) => post('config', { ...config, version: chrome.runtime.getManifest().version })));
+  guard(() => chrome.storage.local.get(KEYS).then((config) => {
+    post('config', { ...config, version: chrome.runtime.getManifest().version });
+  }));
 
-  call(() => chrome.storage.onChanged.addListener((changes, area) => {
+  guard(() => chrome.storage.onChanged.addListener((changes, area) => {
     if (!live || area !== 'local') return;
     const patch = {};
     let changed = false;
