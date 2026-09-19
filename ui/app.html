@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Uncap</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+  <header class="bar">
+    <span class="mark" aria-hidden="true"></span>
+    <h1>Uncap</h1>
+    <span class="version" id="version"></span>
+    <span class="grow"></span>
+    <button type="button" class="switch" id="power" role="switch" aria-label="Uncap"></button>
+  </header>
+
+  <section class="quiet">
+    <span class="halo" aria-hidden="true"></span>
+    <p class="big" id="quietTitle"></p>
+    <p class="note" id="quietNote"></p>
+  </section>
+
+  <section class="hero">
+    <p class="tier" id="tier">&mdash;</p>
+    <p class="resolution" id="resolution"></p>
+    <p class="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText"></span>
+    </p>
+  </section>
+
+  <section class="card">
+    <p class="label" data-i18n="enhancer"></p>
+    <div class="segments" id="mode" role="radiogroup"></div>
+    <div id="custom"></div>
+    <p class="line" id="scaleLine"></p>
+  </section>
+
+  <dl class="readout" id="mainRows"></dl>
+
+  <details class="fold">
+    <summary data-i18n="details"></summary>
+    <div>
+      <dl class="readout flush" id="extraRows"></dl>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary data-i18n="secTuning"></summary>
+    <div>
+      <div class="group">
+        <p class="label" data-i18n="smoothMotion"></p>
+        <div class="segments" id="smooth" role="radiogroup"></div>
+      </div>
+      <div class="group">
+        <p class="label" data-i18n="outputSize"></p>
+        <div class="segments" id="target" role="radiogroup"></div>
+      </div>
+      <div class="group">
+        <p class="label" data-i18n="sound"></p>
+        <div id="soundRows"></div>
+        <p class="prose" data-i18n="soundNote"></p>
+      </div>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary data-i18n="secStream"></summary>
+    <div>
+      <div id="streamRows"></div>
+      <p class="prose" data-i18n="streamNote"></p>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary data-i18n="secSites"></summary>
+    <div>
+      <div id="siteRows"></div>
+      <div class="row">
+        <input type="text" id="patternInput" placeholder="*.bilibili.com/*" spellcheck="false">
+        <button type="button" class="ghost" id="patternAdd" data-i18n="add"></button>
+      </div>
+      <div class="row">
+        <button type="button" class="ghost" id="grantAll"></button>
+      </div>
+      <div id="allowList"></div>
+      <p class="prose" data-i18n="sitesNote"></p>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary data-i18n="secGeneral"></summary>
+    <div>
+      <div class="group">
+        <div class="segments" id="theme" role="radiogroup"></div>
+        <div id="chromeRows"></div>
+      </div>
+      <div class="group">
+        <p class="label" data-i18n="secShortcuts"></p>
+        <div id="shortcuts"></div>
+        <p class="prose" data-i18n="shortcutsNote"></p>
+      </div>
+    </div>
+  </details>
+
+  <button type="button" class="action" id="reload" hidden></button>
+  <button type="button" class="action" id="grant" hidden></button>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

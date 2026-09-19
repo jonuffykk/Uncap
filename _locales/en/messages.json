@@ -1,0 +1,522 @@
+{
+  "description": {
+    "message": "Unlocks the best picture and sound your hardware can actually play, then sharpens what arrives."
+  },
+  "cmdPower": {
+    "message": "Rest Uncap, or wake it"
+  },
+  "cmdHud": {
+    "message": "Show the readout on the page"
+  },
+  "cmdMode": {
+    "message": "Cycle the enhancer"
+  },
+  "cmdCompare": {
+    "message": "Split the picture to compare"
+  },
+  "enhancer": {
+    "message": "Enhancer"
+  },
+  "details": {
+    "message": "Details"
+  },
+  "secTuning": {
+    "message": "Tuning"
+  },
+  "sound": {
+    "message": "Sound"
+  },
+  "smoothMotion": {
+    "message": "Smooth motion"
+  },
+  "outputSize": {
+    "message": "Output size"
+  },
+  "secStream": {
+    "message": "Stream"
+  },
+  "secSites": {
+    "message": "Sites"
+  },
+  "secShortcuts": {
+    "message": "Shortcuts"
+  },
+  "secGeneral": {
+    "message": "General"
+  },
+  "add": {
+    "message": "Add"
+  },
+  "remove": {
+    "message": "Remove"
+  },
+  "soundNote": {
+    "message": "Boost runs the page's audio through a gain stage. It needs same origin or blob media, which is what a streaming player uses, and it cannot touch audio the browser keeps behind DRM."
+  },
+  "streamNote": {
+    "message": "These decide what the server sends before anything is drawn. No upscaler recovers detail that was never streamed, which is why this half matters more than the filter."
+  },
+  "sitesNote": {
+    "message": "Patterns match the hostname and path, and * stands for anything. Netflix and YouTube are always on. Any other site also needs its own permission."
+  },
+  "shortcutsNote": {
+    "message": "Every shortcut is ctrl and alt together with the key you pick, handled on the page so it works whatever your layout puts on those letters. Chrome will not register ctrl and alt at the browser level, so set browser keys of your own at chrome://extensions/shortcuts if you want them without page focus."
+  },
+  "modeOff": {
+    "message": "Off"
+  },
+  "modeBalanced": {
+    "message": "Balanced"
+  },
+  "modeSharp": {
+    "message": "Sharp"
+  },
+  "modeAnime": {
+    "message": "Anime"
+  },
+  "modeCustom": {
+    "message": "Custom"
+  },
+  "smoothOff": {
+    "message": "Off"
+  },
+  "smoothAuto": {
+    "message": "Auto"
+  },
+  "targetAuto": {
+    "message": "Auto"
+  },
+  "targetNative": {
+    "message": "Native"
+  },
+  "themeAuto": {
+    "message": "System"
+  },
+  "themeDark": {
+    "message": "Dark"
+  },
+  "themeLight": {
+    "message": "Light"
+  },
+  "slider_sharpen": {
+    "message": "Sharpen"
+  },
+  "slider_deblur": {
+    "message": "Deblur"
+  },
+  "slider_darken": {
+    "message": "Line darkening"
+  },
+  "slider_thin": {
+    "message": "Line thinning"
+  },
+  "slider_denoise": {
+    "message": "Denoise"
+  },
+  "slider_deband": {
+    "message": "Deband"
+  },
+  "slider_volume": {
+    "message": "Volume boost"
+  },
+  "toggle_compress": {
+    "message": "Even out loud and quiet"
+  },
+  "hint_compress": {
+    "message": "Night mode, so dialogue keeps up with the explosions"
+  },
+  "toggle_compare": {
+    "message": "Compare split"
+  },
+  "toggle_hud": {
+    "message": "Readout on the page"
+  },
+  "toggle_badge": {
+    "message": "Quality badge on the icon"
+  },
+  "toggle_stream": {
+    "message": "Stream layer"
+  },
+  "hint_stream": {
+    "message": "Everything below depends on this"
+  },
+  "toggle_efficient": {
+    "message": "Skip software codecs"
+  },
+  "hint_efficient": {
+    "message": "Declines a codec your machine decodes on the CPU"
+  },
+  "toggle_display": {
+    "message": "4K display report"
+  },
+  "toggle_codecs": {
+    "message": "Codec and profile ladder"
+  },
+  "toggle_audio": {
+    "message": "Surround and Atmos"
+  },
+  "toggle_tracks": {
+    "message": "Every dub and subtitle"
+  },
+  "toggle_peak": {
+    "message": "Top quality rung"
+  },
+  "toggle_drm": {
+    "message": "Hardware DRM first"
+  },
+  "toggle_hdr": {
+    "message": "Force HDR"
+  },
+  "hint_hdr": {
+    "message": "Leave off unless the panel really is HDR"
+  },
+  "toggle_allowAll": {
+    "message": "Run everywhere"
+  },
+  "hint_allowAll": {
+    "message": "Turn off to use the list below instead"
+  },
+  "action_power": {
+    "message": "Rest or wake"
+  },
+  "action_hud": {
+    "message": "Readout"
+  },
+  "action_mode": {
+    "message": "Cycle the enhancer"
+  },
+  "action_compare": {
+    "message": "Compare split"
+  },
+  "pressKey": {
+    "message": "press a key"
+  },
+  "hardware": {
+    "message": "hardware"
+  },
+  "software": {
+    "message": "software"
+  },
+  "inUse": {
+    "message": "in use"
+  },
+  "inHardware": {
+    "message": "$1 in hardware",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "inSoftware": {
+    "message": "$1 in software",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "thisMachine": {
+    "message": "this machine"
+  },
+  "pictureCost": {
+    "message": "picture cost"
+  },
+  "motionField": {
+    "message": "motion field"
+  },
+  "boost": {
+    "message": "boost"
+  },
+  "yourDisplay": {
+    "message": "your display"
+  },
+  "topRung": {
+    "message": "top rung"
+  },
+  "available": {
+    "message": "available"
+  },
+  "standby": {
+    "message": "standby"
+  },
+  "noneNeeded": {
+    "message": "none needed"
+  },
+  "noDecoder": {
+    "message": "no decoder in this browser"
+  },
+  "needsPlayReady": {
+    "message": "needs playready"
+  },
+  "notOffered": {
+    "message": "not offered here"
+  },
+  "levelled": {
+    "message": "levelled"
+  },
+  "drmPromoted": {
+    "message": "promoted"
+  },
+  "boostOn": {
+    "message": "$1× through a gain stage",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "boostBlocked": {
+    "message": "this browser refused the audio graph"
+  },
+  "boostCrossOrigin": {
+    "message": "this audio comes from another origin, so it is left alone"
+  },
+  "pin_api": {
+    "message": "pinned"
+  },
+  "pin_menu": {
+    "message": "pinned through the menu"
+  },
+  "pin_refused": {
+    "message": "refused"
+  },
+  "pin_eased": {
+    "message": "eased down to play"
+  },
+  "vResting": {
+    "message": "Resting. The player is choosing on its own."
+  },
+  "vOffsite": {
+    "message": "Uncap is not turned on for this site."
+  },
+  "vReady": {
+    "message": "Ready. Press play."
+  },
+  "vSoftDecode": {
+    "message": "Dropping frames. This codec has no hardware decoder here."
+  },
+  "vEasing": {
+    "message": "Dropping frames. The filter is easing off to catch up."
+  },
+  "vDropping": {
+    "message": "Dropping frames, $1 of $2.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "vUhd": {
+    "message": "Ultra HD, straight from the decoder."
+  },
+  "vNoSpoof": {
+    "message": "The display report is off, so the player caps by your real screen."
+  },
+  "vRefused": {
+    "message": "The player would not hold $1. Try fullscreen.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vHigherExists": {
+    "message": "$1 exists and the player has not taken it.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vBestAvailable": {
+    "message": "$1 is the best this video has.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vSoftDrm": {
+    "message": "Software DRM caps this session at $1p.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vEnhanced": {
+    "message": "$1p, enhanced to $2.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "vPlaying": {
+    "message": "Playing at $1p.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "mBoosted": {
+    "message": "$1 to $2 fps",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "mLeftAlone": {
+    "message": "motion left alone so the rest keeps up"
+  },
+  "mFills": {
+    "message": "$1 fps already fills $2 Hz",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "mNoRoom": {
+    "message": "no room left to add frames"
+  },
+  "sOff": {
+    "message": "The picture is left exactly as the player sends it."
+  },
+  "sOffSplit": {
+    "message": "The picture is left as the player sends it, so the split has nothing to show."
+  },
+  "sNothingToSplit": {
+    "message": "The split has nothing to show here."
+  },
+  "sLarger": {
+    "message": "$1× larger",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sDown": {
+    "message": "$1× down",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sSharpenOnly": {
+    "message": "sharpening only"
+  },
+  "sSharpenDropped": {
+    "message": "sharpening dropped to keep up"
+  },
+  "sSplit": {
+    "message": "split, drag the seam"
+  },
+  "sPerFrame": {
+    "message": "$1 ms per frame",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "why_guarded": {
+    "message": "This player keeps its frames behind DRM, so they never reach the page."
+  },
+  "why_tainted": {
+    "message": "This video comes from another origin and the browser will not let the page read it."
+  },
+  "why_hdr": {
+    "message": "HDR is left to the browser so the colour stays right."
+  },
+  "why_tiny": {
+    "message": "The video is more than three times the player, so the browser handles the shrink."
+  },
+  "why_slow": {
+    "message": "This machine could not keep up, so the filter stood down."
+  },
+  "why_gpu": {
+    "message": "The GPU pipeline failed here. Uncap keeps retrying."
+  },
+  "why_offsite": {
+    "message": "Uncap is not turned on for this site."
+  },
+  "why_waiting": {
+    "message": "Waiting for a video."
+  },
+  "ready": {
+    "message": "Ready"
+  },
+  "pressPlay": {
+    "message": "press play"
+  },
+  "reloadTab": {
+    "message": "Reload this tab"
+  },
+  "turnOnFor": {
+    "message": "Turn on for $1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "qNothing": {
+    "message": "Nothing playing"
+  },
+  "qOpenSite": {
+    "message": "Open a video and press play."
+  },
+  "qPressPlay": {
+    "message": "Press play and this fills in."
+  },
+  "qReload": {
+    "message": "This tab needs a reload"
+  },
+  "qReloadNote": {
+    "message": "It was already open before Uncap started running."
+  },
+  "qNotOn": {
+    "message": "Not on yet"
+  },
+  "qNotOnNote": {
+    "message": "Turn Uncap on for $1 to work on its video.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "qResting": {
+    "message": "Resting"
+  },
+  "qRestingNote": {
+    "message": "The player is choosing on its own."
+  },
+  "grantAll": {
+    "message": "Allow every site now"
+  },
+  "grantAllHeld": {
+    "message": "Every site is already allowed"
+  },
+  "noPatterns": {
+    "message": "No patterns yet. Uncap runs everywhere while the switch above is on."
+  }
+}
