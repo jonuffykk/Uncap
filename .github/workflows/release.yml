@@ -1,0 +1,160 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      fresh: ${{ steps.read.outputs.fresh }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Parse every script
+        run: for file in src/*.js ui/*.js; do node --check "$file"; done
+
+      - name: Parse every locale
+        run: |
+          for file in manifest.json _locales/*/messages.json; do
+            node -e "JSON.parse(require('fs').readFileSync('$file','utf8'))"
+          done
+
+      - name: Every message key resolves
+        run: |
+          node -e '
+            const fs = require("fs");
+            const dynamic = [/^toggle_/, /^hint_/, /^slider_/, /^action_/, /^why_/, /^pin_/];
+            const used = new Set();
+            for (const [, key] of fs.readFileSync("manifest.json", "utf8").matchAll(/__MSG_(\w+)__/g)) used.add(key);
+            for (const name of fs.readdirSync("ui")) {
+              const text = fs.readFileSync(`ui/${name}`, "utf8");
+              for (const [, key] of text.matchAll(/\bt\("?'"'"'([A-Za-z0-9_]+)'"'"'/g)) used.add(key);
+              for (const [, key] of text.matchAll(/data-i18n="([A-Za-z0-9_]+)"/g)) used.add(key);
+            }
+            const locales = fs.readdirSync("_locales");
+            const tables = Object.fromEntries(locales.map((l) => [l, JSON.parse(fs.readFileSync(`_locales/${l}/messages.json`, "utf8"))]));
+            const base = tables.en;
+            const problems = [];
+            for (const key of used) if (!base[key] && !dynamic.some((p) => p.test(key))) problems.push(`en is missing ${key}`);
+            for (const [locale, table] of Object.entries(tables)) {
+              if (locale === "en") continue;
+              for (const key of Object.keys(base)) if (!table[key]) problems.push(`${locale} is missing ${key}`);
+              for (const key of Object.keys(table)) if (!base[key]) problems.push(`${locale} has a stray ${key}`);
+            }
+            if (problems.length) { console.error(problems.join("\n")); process.exit(1); }
+            console.log(`${Object.keys(base).length} keys across ${locales.length} locales`);
+          '
+
+      - name: The changelog covers this version
+        id: read
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          grep -q "^## $version\$" CHANGELOG.md || { echo "CHANGELOG.md has no '## $version' section"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1; then
+            echo "fresh=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "fresh=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.check.outputs.fresh == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Stage both targets
+        run: |
+          node -e '
+            const fs = require("fs");
+            const payload = ["src", "ui", "_locales", "icons", "LICENSE", "PRIVACY.md"];
+            const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            const stage = (name, edited) => {
+              fs.mkdirSync(`dist/${name}`, { recursive: true });
+              for (const item of payload) fs.cpSync(item, `dist/${name}/${item}`, { recursive: true });
+              fs.writeFileSync(`dist/${name}/manifest.json`, JSON.stringify(edited, null, 2) + "\n");
+            };
+            const gecko = structuredClone(manifest);
+            gecko.background = { scripts: [manifest.background.service_worker], type: "module" };
+            gecko.browser_specific_settings = { gecko: { id: "uncap@andersonalves.site", strict_min_version: "128.0" } };
+            delete gecko.minimum_chrome_version;
+            stage("chrome", manifest);
+            stage("firefox", gecko);
+          '
+
+      - name: Package
+        run: |
+          mkdir -p out
+          (cd dist/chrome && zip -qr ../../out/uncap-chrome.zip .)
+          (cd dist/firefox && zip -qr ../../out/uncap-firefox.zip .)
+          git archive --format=zip --output=out/uncap-source.zip HEAD
+
+      - name: Lift the notes out of the changelog
+        run: |
+          node -e '
+            const fs = require("fs");
+            const wanted = process.env.VERSION;
+            const section = fs.readFileSync("CHANGELOG.md", "utf8")
+              .split(/^## /m)
+              .find((part) => part.trimStart().startsWith(wanted));
+            fs.writeFileSync("out/notes.md", section.slice(section.indexOf("\n")).trim() + "\n");
+          '
+
+      - name: Tag and publish
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Uncap ${{ env.VERSION }}
+          body_path: out/notes.md
+          files: out/*.zip
+
+      - name: Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        if: env.CLIENT_SECRET != ''
+        continue-on-error: true
+        run: npx --yes chrome-webstore-upload-cli@3 upload --source out/uncap-chrome.zip --auto-publish
+
+      - name: Microsoft Edge Add-ons
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        if: env.EDGE_API_KEY != ''
+        continue-on-error: true
+        run: |
+          base="https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions"
+          curl -sSf -X POST "$base/draft/package" -H "Authorization: ApiKey $EDGE_API_KEY" -H "X-ClientID: $EDGE_CLIENT_ID" -H "Content-Type: application/zip" --data-binary @out/uncap-chrome.zip
+          sleep 30
+          curl -sSf -X POST "$base" -H "Authorization: ApiKey $EDGE_API_KEY" -H "X-ClientID: $EDGE_CLIENT_ID" -H "Content-Length: 0"
+
+      - name: Firefox Add-ons
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        if: env.WEB_EXT_API_KEY != ''
+        continue-on-error: true
+        run: npx --yes web-ext@8 sign --source-dir dist/firefox --upload-source-code out/uncap-source.zip --channel listed

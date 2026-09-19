@@ -1,14 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Nitrate",
-  "version": "4.1.0",
-  "description": "Unlocks the highest video and audio Netflix will actually serve your hardware, and tells you exactly what you are getting.",
+  "name": "Uncap",
+  "version": "2.1.0",
+  "default_locale": "en",
+  "description": "__MSG_description__",
   "minimum_chrome_version": "111",
   "permissions": [
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
-    "*://*.netflix.com/*"
+    "*://*.netflix.com/*",
+    "*://*.youtube.com/*"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
   ],
   "icons": {
     "16": "icons/icon16.png",
@@ -17,8 +23,8 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "Nitrate",
+    "default_popup": "ui/app.html",
+    "default_title": "Uncap",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -29,10 +35,16 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.netflix.com/*"
+        "*://*.netflix.com/*",
+        "*://*.youtube.com/*"
       ],
       "js": [
-        "core.js"
+        "src/core.js",
+        "src/stream.js",
+        "src/gpu.js",
+        "src/render.js",
+        "src/hud.js",
+        "src/sites.js"
       ],
       "run_at": "document_start",
       "world": "MAIN",
@@ -40,25 +52,32 @@
     },
     {
       "matches": [
-        "*://*.netflix.com/*"
+        "*://*.netflix.com/*",
+        "*://*.youtube.com/*"
       ],
       "js": [
-        "content.js"
+        "src/bridge.js"
       ],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "src/worker.js",
     "type": "module"
   },
   "commands": {
-    "toggle-engine": {
-      "suggested_key": {
-        "default": "Alt+Shift+N"
-      },
-      "description": "Turn Nitrate on or off"
+    "togglePower": {
+      "description": "__MSG_cmdPower__"
+    },
+    "toggleHud": {
+      "description": "__MSG_cmdHud__"
+    },
+    "cycleMode": {
+      "description": "__MSG_cmdMode__"
+    },
+    "toggleCompare": {
+      "description": "__MSG_cmdCompare__"
     }
   }
 }

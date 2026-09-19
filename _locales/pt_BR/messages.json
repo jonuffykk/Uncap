@@ -1,0 +1,522 @@
+{
+  "description": {
+    "message": "Libera a melhor imagem e o melhor som que seu hardware consegue tocar, e depois refina o que chega."
+  },
+  "cmdPower": {
+    "message": "Descansar ou acordar o Uncap"
+  },
+  "cmdHud": {
+    "message": "Mostrar o painel na página"
+  },
+  "cmdMode": {
+    "message": "Alternar o filtro"
+  },
+  "cmdCompare": {
+    "message": "Dividir a imagem para comparar"
+  },
+  "enhancer": {
+    "message": "Filtro"
+  },
+  "details": {
+    "message": "Detalhes"
+  },
+  "secTuning": {
+    "message": "Ajuste fino"
+  },
+  "sound": {
+    "message": "Som"
+  },
+  "smoothMotion": {
+    "message": "Movimento suave"
+  },
+  "outputSize": {
+    "message": "Tamanho de saída"
+  },
+  "secStream": {
+    "message": "Stream"
+  },
+  "secSites": {
+    "message": "Sites"
+  },
+  "secShortcuts": {
+    "message": "Atalhos"
+  },
+  "secGeneral": {
+    "message": "Geral"
+  },
+  "add": {
+    "message": "Adicionar"
+  },
+  "remove": {
+    "message": "Remover"
+  },
+  "soundNote": {
+    "message": "O reforço passa o áudio da página por um estágio de ganho. Precisa de mídia de mesma origem ou blob, que é o que um player de streaming usa, e não alcança áudio que o navegador guarda atrás de DRM."
+  },
+  "streamNote": {
+    "message": "Estes decidem o que o servidor manda antes de qualquer desenho. Nenhum upscaler recupera detalhe que nunca foi transmitido, e é por isso que esta metade pesa mais que o filtro."
+  },
+  "sitesNote": {
+    "message": "Os padrões batem com o host e o caminho, e * vale por qualquer coisa. Netflix e YouTube estão sempre ligados. Qualquer outro site também precisa da permissão dele."
+  },
+  "shortcutsNote": {
+    "message": "Todo atalho é ctrl e alt junto com a tecla que você escolher, tratado na página para funcionar com qualquer layout de teclado. O Chrome não registra ctrl e alt no nível do navegador, então defina teclas próprias em chrome://extensions/shortcuts se quiser sem foco na página."
+  },
+  "modeOff": {
+    "message": "Desligado"
+  },
+  "modeBalanced": {
+    "message": "Equilibrado"
+  },
+  "modeSharp": {
+    "message": "Nítido"
+  },
+  "modeAnime": {
+    "message": "Anime"
+  },
+  "modeCustom": {
+    "message": "Manual"
+  },
+  "smoothOff": {
+    "message": "Desligado"
+  },
+  "smoothAuto": {
+    "message": "Auto"
+  },
+  "targetAuto": {
+    "message": "Auto"
+  },
+  "targetNative": {
+    "message": "Nativo"
+  },
+  "themeAuto": {
+    "message": "Sistema"
+  },
+  "themeDark": {
+    "message": "Escuro"
+  },
+  "themeLight": {
+    "message": "Claro"
+  },
+  "slider_sharpen": {
+    "message": "Nitidez"
+  },
+  "slider_deblur": {
+    "message": "Tirar borrão"
+  },
+  "slider_darken": {
+    "message": "Escurecer traços"
+  },
+  "slider_thin": {
+    "message": "Afinar traços"
+  },
+  "slider_denoise": {
+    "message": "Reduzir ruído"
+  },
+  "slider_deband": {
+    "message": "Tirar faixas"
+  },
+  "slider_volume": {
+    "message": "Reforço de volume"
+  },
+  "toggle_compress": {
+    "message": "Igualar alto e baixo"
+  },
+  "hint_compress": {
+    "message": "Modo noturno, para o diálogo acompanhar as explosões"
+  },
+  "toggle_compare": {
+    "message": "Divisão de comparação"
+  },
+  "toggle_hud": {
+    "message": "Painel na página"
+  },
+  "toggle_badge": {
+    "message": "Selo de qualidade no ícone"
+  },
+  "toggle_stream": {
+    "message": "Camada de stream"
+  },
+  "hint_stream": {
+    "message": "Tudo abaixo depende disto"
+  },
+  "toggle_efficient": {
+    "message": "Evitar codecs por software"
+  },
+  "hint_efficient": {
+    "message": "Recusa um codec que sua máquina decodifica na CPU"
+  },
+  "toggle_display": {
+    "message": "Reportar tela 4K"
+  },
+  "toggle_codecs": {
+    "message": "Escada de codecs e perfis"
+  },
+  "toggle_audio": {
+    "message": "Surround e Atmos"
+  },
+  "toggle_tracks": {
+    "message": "Todas as dublagens e legendas"
+  },
+  "toggle_peak": {
+    "message": "Degrau máximo de qualidade"
+  },
+  "toggle_drm": {
+    "message": "DRM por hardware primeiro"
+  },
+  "toggle_hdr": {
+    "message": "Forçar HDR"
+  },
+  "hint_hdr": {
+    "message": "Deixe desligado se o monitor não for HDR de verdade"
+  },
+  "toggle_allowAll": {
+    "message": "Rodar em todo lugar"
+  },
+  "hint_allowAll": {
+    "message": "Desligue para usar a lista abaixo"
+  },
+  "action_power": {
+    "message": "Descansar ou acordar"
+  },
+  "action_hud": {
+    "message": "Painel"
+  },
+  "action_mode": {
+    "message": "Alternar o filtro"
+  },
+  "action_compare": {
+    "message": "Divisão de comparação"
+  },
+  "pressKey": {
+    "message": "aperte uma tecla"
+  },
+  "hardware": {
+    "message": "hardware"
+  },
+  "software": {
+    "message": "software"
+  },
+  "inUse": {
+    "message": "em uso"
+  },
+  "inHardware": {
+    "message": "$1 em hardware",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "inSoftware": {
+    "message": "$1 em software",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "thisMachine": {
+    "message": "esta máquina"
+  },
+  "pictureCost": {
+    "message": "custo da imagem"
+  },
+  "motionField": {
+    "message": "campo de movimento"
+  },
+  "boost": {
+    "message": "reforço"
+  },
+  "yourDisplay": {
+    "message": "seu monitor"
+  },
+  "topRung": {
+    "message": "degrau máximo"
+  },
+  "available": {
+    "message": "disponível"
+  },
+  "standby": {
+    "message": "aguardando"
+  },
+  "noneNeeded": {
+    "message": "nenhum necessário"
+  },
+  "noDecoder": {
+    "message": "sem decodificador neste navegador"
+  },
+  "needsPlayReady": {
+    "message": "precisa de playready"
+  },
+  "notOffered": {
+    "message": "não oferecido aqui"
+  },
+  "levelled": {
+    "message": "nivelado"
+  },
+  "drmPromoted": {
+    "message": "promovido"
+  },
+  "boostOn": {
+    "message": "$1× por um estágio de ganho",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "boostBlocked": {
+    "message": "este navegador recusou o grafo de áudio"
+  },
+  "boostCrossOrigin": {
+    "message": "este áudio vem de outra origem, então fica intocado"
+  },
+  "pin_api": {
+    "message": "fixado"
+  },
+  "pin_menu": {
+    "message": "fixado pelo menu"
+  },
+  "pin_refused": {
+    "message": "recusado"
+  },
+  "pin_eased": {
+    "message": "reduzido para conseguir tocar"
+  },
+  "vResting": {
+    "message": "Descansando. O player está escolhendo sozinho."
+  },
+  "vOffsite": {
+    "message": "O Uncap não está ligado para este site."
+  },
+  "vReady": {
+    "message": "Pronto. Dê play."
+  },
+  "vSoftDecode": {
+    "message": "Perdendo quadros. Este codec não tem decodificador de hardware aqui."
+  },
+  "vEasing": {
+    "message": "Perdendo quadros. O filtro está recuando para acompanhar."
+  },
+  "vDropping": {
+    "message": "Perdendo quadros, $1 de $2.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "vUhd": {
+    "message": "Ultra HD, direto do decodificador."
+  },
+  "vNoSpoof": {
+    "message": "O relato de tela está desligado, então o player limita pela sua tela real."
+  },
+  "vRefused": {
+    "message": "O player não segurou $1. Tente tela cheia.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vHigherExists": {
+    "message": "$1 existe e o player não pegou.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vBestAvailable": {
+    "message": "$1 é o melhor que este vídeo tem.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vSoftDrm": {
+    "message": "DRM por software limita esta sessão a $1p.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vEnhanced": {
+    "message": "$1p, ampliado para $2.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "vPlaying": {
+    "message": "Tocando em $1p.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "mBoosted": {
+    "message": "$1 para $2 fps",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "mLeftAlone": {
+    "message": "movimento intocado para o resto acompanhar"
+  },
+  "mFills": {
+    "message": "$1 fps já preenche $2 Hz",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      },
+      "2": {
+        "content": "$2"
+      }
+    }
+  },
+  "mNoRoom": {
+    "message": "sem espaço para acrescentar quadros"
+  },
+  "sOff": {
+    "message": "A imagem fica exatamente como o player manda."
+  },
+  "sOffSplit": {
+    "message": "A imagem fica como o player manda, então a divisão não tem o que mostrar."
+  },
+  "sNothingToSplit": {
+    "message": "A divisão não tem o que mostrar aqui."
+  },
+  "sLarger": {
+    "message": "$1× maior",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sDown": {
+    "message": "$1× menor",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sSharpenOnly": {
+    "message": "só nitidez"
+  },
+  "sSharpenDropped": {
+    "message": "nitidez desligada para acompanhar"
+  },
+  "sSplit": {
+    "message": "dividido, arraste a emenda"
+  },
+  "sPerFrame": {
+    "message": "$1 ms por quadro",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "why_guarded": {
+    "message": "Este player guarda os quadros atrás do DRM, então eles nunca chegam à página."
+  },
+  "why_tainted": {
+    "message": "Este vídeo vem de outra origem e o navegador não deixa a página lê-lo."
+  },
+  "why_hdr": {
+    "message": "O HDR fica com o navegador para a cor continuar certa."
+  },
+  "why_tiny": {
+    "message": "O vídeo é mais de três vezes o player, então o navegador cuida da redução."
+  },
+  "why_slow": {
+    "message": "Esta máquina não deu conta, então o filtro se afastou."
+  },
+  "why_gpu": {
+    "message": "A pipeline da GPU falhou aqui. O Uncap continua tentando."
+  },
+  "why_offsite": {
+    "message": "O Uncap não está ligado para este site."
+  },
+  "why_waiting": {
+    "message": "Esperando um vídeo."
+  },
+  "ready": {
+    "message": "Pronto"
+  },
+  "pressPlay": {
+    "message": "dê play"
+  },
+  "reloadTab": {
+    "message": "Recarregar esta aba"
+  },
+  "turnOnFor": {
+    "message": "Ligar para $1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "qNothing": {
+    "message": "Nada tocando"
+  },
+  "qOpenSite": {
+    "message": "Abra um vídeo e dê play."
+  },
+  "qPressPlay": {
+    "message": "Dê play e isto se preenche."
+  },
+  "qReload": {
+    "message": "Esta aba precisa recarregar"
+  },
+  "qReloadNote": {
+    "message": "Ela já estava aberta antes do Uncap começar a rodar."
+  },
+  "qNotOn": {
+    "message": "Ainda não ligado"
+  },
+  "qNotOnNote": {
+    "message": "Ligue o Uncap para $1 trabalhar no vídeo dele.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "qResting": {
+    "message": "Descansando"
+  },
+  "qRestingNote": {
+    "message": "O player está escolhendo sozinho."
+  },
+  "grantAll": {
+    "message": "Liberar todos os sites agora"
+  },
+  "grantAllHeld": {
+    "message": "Todos os sites já estão liberados"
+  },
+  "noPatterns": {
+    "message": "Nenhum padrão ainda. O Uncap roda em todo lugar enquanto a chave acima estiver ligada."
+  }
+}
